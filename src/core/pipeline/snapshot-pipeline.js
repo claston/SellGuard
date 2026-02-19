@@ -3,22 +3,7 @@ import { summarizeChange } from "../services/diff-summary-service.js";
 import { hashSha256 } from "../services/hash-service.js";
 import { normalizeContent } from "../services/normalizer.js";
 import { scoreRelevance } from "../services/relevance-heuristic.js";
-
-function extractRawContent(scrapeResult) {
-  if (typeof scrapeResult === "string") {
-    return scrapeResult;
-  }
-
-  if (scrapeResult?.rawContent) {
-    return scrapeResult.rawContent;
-  }
-
-  if (scrapeResult?.content) {
-    return scrapeResult.content;
-  }
-
-  return "";
-}
+import { toCanonicalScrapePayload } from "../../providers/scrape-provider.js";
 
 export function createSnapshotPipeline({
   repositories,
@@ -40,7 +25,8 @@ export function createSnapshotPipeline({
           monitoredUrl.id
         );
         const scrapeResult = await scrapeProvider.scrape(monitoredUrl.url);
-        const rawContent = extractRawContent(scrapeResult);
+        const canonicalPayload = toCanonicalScrapePayload(monitoredUrl.url, scrapeResult);
+        const rawContent = canonicalPayload.rawContent;
         const normalizedContent = normalizer(rawContent);
         const contentHash = hashService(normalizedContent);
 

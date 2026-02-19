@@ -61,12 +61,21 @@ test("snapshot pipeline creates change_event only when changed and relevant", as
     active: true
   });
 
-  const responses = ["base content", "updated fee policy with penalty"];
+  let feeUrlScrapeCount = 0;
   const pipeline = createSnapshotPipeline({
     repositories,
     scrapeProvider: {
-      async scrape() {
-        return { rawContent: responses.shift() };
+      async scrape(url) {
+        if (url === monitored.url) {
+          feeUrlScrapeCount += 1;
+          if (feeUrlScrapeCount === 1) {
+            return { rawContent: "base content" };
+          }
+
+          return { rawContent: "updated fee policy with penalty" };
+        }
+
+        return { rawContent: "unrelated content" };
       }
     }
   });
