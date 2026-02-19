@@ -44,7 +44,7 @@ Acceptance criteria:
 ## Epic 2: Scraping and normalization
 
 ### SG-020 - Define `ScrapeProvider` contract
-Status: TODO
+Status: DONE
 Owner: Clayton
 Acceptance criteria:
 - Interface supports scraping by URL and returns canonical content payload
@@ -59,7 +59,7 @@ Acceptance criteria:
 - Emits structured logs for failures
 
 ### SG-022 - Implement `Normalizer`
-Status: TODO
+Status: IN_PROGRESS
 Owner: Clayton
 Acceptance criteria:
 - Normalizes whitespace/boilerplate consistently
@@ -69,21 +69,21 @@ Acceptance criteria:
 ## Epic 3: Change detection and relevance
 
 ### SG-030 - Implement `HashService` (SHA-256)
-Status: TODO
+Status: IN_PROGRESS
 Owner: Clayton
 Acceptance criteria:
 - Generates stable hash for normalized content
 - Unit tests validate deterministic behavior
 
 ### SG-031 - Implement `ChangeDetector`
-Status: TODO
+Status: IN_PROGRESS
 Owner: Clayton
 Acceptance criteria:
 - Detects changed vs unchanged snapshots using hash
 - Captures previous/current snapshot linkage for events
 
 ### SG-032 - Implement `RelevanceHeuristic`
-Status: TODO
+Status: IN_PROGRESS
 Owner: Clayton
 Acceptance criteria:
 - Score uses delta size + keyword hit + URL priority
@@ -93,7 +93,7 @@ Acceptance criteria:
 ## Epic 4: Notification content and delivery
 
 ### SG-040 - Implement `DiffSummaryService`
-Status: TODO
+Status: IN_PROGRESS
 Owner: Clayton
 Acceptance criteria:
 - Produces concise summary of meaningful changes
@@ -136,7 +136,7 @@ Acceptance criteria:
 - Metrics: runs, failures, relevant changes, emails sent
 
 ### SG-061 - Integration test for end-to-end happy path
-Status: TODO
+Status: IN_PROGRESS
 Owner: Clayton
 Acceptance criteria:
 - Test covers scrape -> snapshot -> detect -> event -> notify
