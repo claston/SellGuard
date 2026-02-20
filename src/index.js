@@ -1,23 +1,20 @@
-import { buildApp } from "./app.js";
 import { loadConfig } from "./config/env.js";
-import { runMigrations } from "./db/migrate.js";
+import { createRuntime } from "./runtime.js";
 
 async function main() {
   const config = loadConfig();
-
-  if (config.db.driver === "pg-mem") {
-    await runMigrations(config);
-    console.log("In-memory database initialized.");
-  }
-
-  const app = buildApp(config);
-
-  await app.listen({
-    host: "0.0.0.0",
-    port: config.server.port
+  const runtime = createRuntime({
+    config,
+    scrapeProvider: {
+      async scrape(url) {
+        throw new Error(
+          `No scrape provider configured for URL: ${url}. Integrate SG-021 provider in runtime wiring.`
+        );
+      }
+    }
   });
 
-  console.log(`SellerGuard listening on port ${config.server.port}`);
+  await runtime.start();
 }
 
 main();
