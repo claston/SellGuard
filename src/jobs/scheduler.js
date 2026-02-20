@@ -5,6 +5,7 @@ function createRunId(now = new Date()) {
 export function createScheduler({
   runPipeline,
   intervalMinutes,
+  metrics = null,
   logger = console,
   setIntervalFn = setInterval,
   clearIntervalFn = clearInterval,
@@ -32,11 +33,14 @@ export function createScheduler({
     const runId = createRunId(startedAt);
 
     logger.info("pipeline run started", { runId, trigger, startedAt: startedAt.toISOString() });
+    metrics?.increment?.("runs", 1);
 
     try {
-      const result = await runPipeline();
+      const result = await runPipeline({ runId, trigger });
       const finishedAt = nowFn();
       const durationMs = finishedAt.getTime() - startedAt.getTime();
+      metrics?.increment?.("relevant_changes", result?.createdChangeEvents ?? 0);
+      metrics?.increment?.("emails_sent", result?.sentEmails ?? 0);
 
       logger.info("pipeline run completed", {
         runId,
@@ -51,6 +55,7 @@ export function createScheduler({
     } catch (error) {
       const finishedAt = nowFn();
       const durationMs = finishedAt.getTime() - startedAt.getTime();
+      metrics?.increment?.("failures", 1);
 
       logger.error("pipeline run failed", {
         runId,

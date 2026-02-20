@@ -115,3 +115,47 @@ test("scheduler emits run-level metrics in completion log", async () => {
   assert.equal(completion.context.durationMs, 1500);
 });
 
+test("scheduler records observability counters on success and failure", async () => {
+  const counters = {
+    runs: 0,
+    failures: 0,
+    relevant_changes: 0,
+    emails_sent: 0
+  };
+
+  const metrics = {
+    increment(name, value = 1) {
+      counters[name] += value;
+    }
+  };
+
+  const successfulScheduler = createScheduler({
+    intervalMinutes: 1,
+    metrics,
+    runPipeline: async () => ({
+      processedUrls: 2,
+      persistedSnapshots: 2,
+      createdChangeEvents: 3,
+      sentEmails: 2
+    })
+  });
+
+  await successfulScheduler.runNow();
+  assert.equal(counters.runs, 1);
+  assert.equal(counters.failures, 0);
+  assert.equal(counters.relevant_changes, 3);
+  assert.equal(counters.emails_sent, 2);
+
+  const failingScheduler = createScheduler({
+    intervalMinutes: 1,
+    metrics,
+    runPipeline: async () => {
+      throw new Error("pipeline error");
+    }
+  });
+
+  await assert.rejects(() => failingScheduler.runNow(), /pipeline error/);
+  assert.equal(counters.runs, 2);
+  assert.equal(counters.failures, 1);
+});
+

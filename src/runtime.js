@@ -3,6 +3,7 @@ import { createSnapshotPipeline } from "./core/pipeline/snapshot-pipeline.js";
 import { runMigrations as defaultRunMigrations } from "./db/migrate.js";
 import { createRepositories as defaultCreateRepositories } from "./db/repositories.js";
 import { createScheduler as defaultCreateScheduler } from "./jobs/scheduler.js";
+import { createInMemoryMetrics } from "./observability/metrics.js";
 
 export function createRuntime({
   config,
@@ -11,6 +12,7 @@ export function createRuntime({
   createRepositories = defaultCreateRepositories,
   createPipeline = createSnapshotPipeline,
   createScheduler = defaultCreateScheduler,
+  createMetrics = createInMemoryMetrics,
   scrapeProvider,
   logger = console
 }) {
@@ -22,6 +24,7 @@ export function createRuntime({
   }
 
   const app = buildApp(config);
+  const metrics = createMetrics();
   const repositories = createRepositories(config);
   const pipeline = createPipeline({
     repositories,
@@ -30,6 +33,7 @@ export function createRuntime({
   const scheduler = createScheduler({
     intervalMinutes: config.schedule.intervalMinutes,
     runPipeline: () => pipeline.runOnce(),
+    metrics,
     logger
   });
 
@@ -50,6 +54,9 @@ export function createRuntime({
     async stop() {
       scheduler.stop();
       await app.close();
+    },
+    getMetrics() {
+      return metrics.snapshot();
     }
   };
 }

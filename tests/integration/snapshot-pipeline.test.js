@@ -109,6 +109,7 @@ test("snapshot pipeline creates change_event only when changed and relevant", as
 
   assert.equal(firstRun.createdChangeEvents, 0);
   assert.equal(secondRun.createdChangeEvents, 1);
+  assert.equal(secondRun.sentEmails, 1);
   assert.equal(notifyCalls, 1);
   assert.equal(markNotifiedCalls, 1);
 
