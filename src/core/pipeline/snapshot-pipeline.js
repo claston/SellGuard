@@ -8,6 +8,7 @@ import { toCanonicalScrapePayload } from "../../providers/scrape-provider.js";
 export function createSnapshotPipeline({
   repositories,
   scrapeProvider,
+  emailService = null,
   normalizer = normalizeContent,
   hashService = hashSha256,
   changeDetector = isContentChanged,
@@ -61,7 +62,7 @@ export function createSnapshotPipeline({
           relevance
         });
 
-        await repositories.changeEvents.insert({
+        const changeEvent = await repositories.changeEvents.insert({
           monitoredUrlId: monitoredUrl.id,
           previousSnapshotId: previousSnapshot?.id ?? null,
           currentSnapshotId: currentSnapshot.id,
@@ -72,6 +73,14 @@ export function createSnapshotPipeline({
           recommendation: summary.recommendation
         });
         createdChangeEvents += 1;
+
+        if (emailService?.sendChangeAlert) {
+          await emailService.sendChangeAlert({
+            monitoredUrl,
+            changeEvent
+          });
+          await repositories.changeEvents.markNotified(changeEvent.id, new Date().toISOString());
+        }
       }
 
       return {

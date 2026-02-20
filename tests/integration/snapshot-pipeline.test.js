@@ -62,8 +62,32 @@ test("snapshot pipeline creates change_event only when changed and relevant", as
   });
 
   let feeUrlScrapeCount = 0;
+  let notifyCalls = 0;
+  let markNotifiedCalls = 0;
+
+  const baseChangeEvents = repositories.changeEvents;
+  const instrumentedRepositories = {
+    ...repositories,
+    changeEvents: {
+      ...baseChangeEvents,
+      async insert(payload) {
+        return baseChangeEvents.insert(payload);
+      },
+      async markNotified(id, notifiedAt) {
+        markNotifiedCalls += 1;
+        return baseChangeEvents.markNotified(id, notifiedAt);
+      }
+    }
+  };
+
   const pipeline = createSnapshotPipeline({
-    repositories,
+    repositories: instrumentedRepositories,
+    emailService: {
+      async sendChangeAlert() {
+        notifyCalls += 1;
+        return { providerMessageId: "msg-1" };
+      }
+    },
     scrapeProvider: {
       async scrape(url) {
         if (url === monitored.url) {
@@ -85,6 +109,8 @@ test("snapshot pipeline creates change_event only when changed and relevant", as
 
   assert.equal(firstRun.createdChangeEvents, 0);
   assert.equal(secondRun.createdChangeEvents, 1);
+  assert.equal(notifyCalls, 1);
+  assert.equal(markNotifiedCalls, 1);
 
   const latestSnapshot = await repositories.snapshots.getLatestByMonitoredUrlId(monitored.id);
   assert.ok(latestSnapshot);
