@@ -20,11 +20,18 @@ function createTimeoutSignal(timeoutMs) {
   };
 }
 
-async function parseResponseBody(response) {
+async function parseResponseBody(response, url) {
   try {
     return await response.json();
-  } catch {
-    return null;
+  } catch (error) {
+    throw createTransientScrapeError(
+      "Firecrawl returned invalid JSON response.",
+      {
+        url,
+        status: response?.status
+      },
+      error
+    );
   }
 }
 
@@ -106,7 +113,7 @@ export function createFirecrawlScrapeProvider({
             signal: timeout.signal
           });
 
-          const body = await parseResponseBody(response);
+          const body = await parseResponseBody(response, url);
 
           if (!response.ok) {
             const message = getErrorMessage(response.status, body);

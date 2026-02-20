@@ -105,3 +105,27 @@ test("firecrawl provider does not retry permanent failures", async () => {
   assert.equal(logger.logs.length, 1);
 });
 
+test("firecrawl provider surfaces invalid JSON response as transient error", async () => {
+  const provider = createFirecrawlScrapeProvider({
+    apiKey: "test-key",
+    maxAttempts: 1,
+    sleep: async () => {},
+    fetchFn: async () => ({
+      ok: true,
+      status: 200,
+      async json() {
+        throw new SyntaxError("Unexpected token < in JSON");
+      }
+    }),
+    logger: createMockLogger()
+  });
+
+  await assert.rejects(() => provider.scrape("https://example.com/invalid-json"), (error) => {
+    assert.ok(error instanceof ScrapeProviderError);
+    assert.equal(error.isTransient, true);
+    assert.match(error.message, /invalid json/i);
+    assert.ok(error.cause instanceof SyntaxError);
+    return true;
+  });
+});
+
