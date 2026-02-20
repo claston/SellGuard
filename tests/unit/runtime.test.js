@@ -38,6 +38,12 @@ test("runtime starts app and scheduler with configured interval", async () => {
       assert.equal(intervalMinutes, 5);
       return fakeScheduler;
     },
+    createMetrics: () => ({
+      increment() {},
+      snapshot() {
+        return { runs: 0, failures: 0, relevant_changes: 0, emails_sent: 0 };
+      }
+    }),
     createPipeline: () => ({
       async runOnce() {
         return {};
@@ -54,6 +60,12 @@ test("runtime starts app and scheduler with configured interval", async () => {
 
   await runtime.stop();
   assert.equal(calls.schedulerStop, 1);
+  assert.deepEqual(runtime.getMetrics(), {
+    runs: 0,
+    failures: 0,
+    relevant_changes: 0,
+    emails_sent: 0
+  });
 });
 
 test("runtime throws when scrapeProvider is not provided", async () => {

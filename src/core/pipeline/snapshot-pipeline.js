@@ -20,6 +20,7 @@ export function createSnapshotPipeline({
       const activeUrls = await repositories.monitoredUrls.listActive();
       let persistedSnapshots = 0;
       let createdChangeEvents = 0;
+      let sentEmails = 0;
 
       for (const monitoredUrl of activeUrls) {
         const previousSnapshot = await repositories.snapshots.getLatestByMonitoredUrlId(
@@ -80,13 +81,15 @@ export function createSnapshotPipeline({
             changeEvent
           });
           await repositories.changeEvents.markNotified(changeEvent.id, new Date().toISOString());
+          sentEmails += 1;
         }
       }
 
       return {
         processedUrls: activeUrls.length,
         persistedSnapshots,
-        createdChangeEvents
+        createdChangeEvents,
+        sentEmails
       };
     }
   };
